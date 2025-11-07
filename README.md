@@ -27,10 +27,11 @@ pip install -r requirements.txt
 
 ## Setup Environment Variables
 
-Create a `.env` in the root of the project in the same manner as the `.env.example` file. Update the following environment variable:
+Create a `.env` in the root of the project in the same manner as the `.env.example` file. Update the following environment variables:
 
 ```bash
 GITLAB_API_PAT=your_personal_access_token_here
+GITLAB_URL=https://gitlab.com
 ```
 
 To get a GitLab access token, login to your GitLab account and click your user profile icon. Then navigate to **Edit profile** > **Access tokens** > **Add new token**. Select the required scopes (at least the **api** scope but the more the merrier) and then create the token.

@@ -5,10 +5,7 @@ from rich import print_json
 
 from schemas import Issue, ProjectDetails, IssueList, ProjectList, Project
 from server import mcp
-from config.constants import GITLAB_URL
-
-
-GITLAB_API_PAT = os.getenv("GITLAB_API_PAT")
+from config.config import GITLAB_URL, GITLAB_API_PAT
 
 
 @mcp.tool(title="List Projects")
