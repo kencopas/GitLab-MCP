@@ -1,6 +1,17 @@
-from schemas.info_schemas import Issue, ProjectDetails, IssueList, ProjectList, Project
+from schemas.info_schemas import Issue, ProjectDetails, IssueList, ProjectList, Project, MergeRequest, MergeRequestList, ListMergeRequestsRequest
 from server import mcp
 from services.gitlab_api import gitlab_request
+
+
+@mcp.tool(title="GitLab API Health Check")
+def gitlab_api_health_check() -> dict:
+    """Check the health of the GitLab API connection."""
+
+    try:
+        response = gitlab_request("GET", "/version")
+        return {"status": "healthy", "version": response.get("version", "unknown")}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
 
 
 @mcp.tool(title="List GitLab Projects")
@@ -37,3 +48,21 @@ def get_issue_details(project_id: int, issue_iid: int) -> Issue:
     response = gitlab_request("GET", f"/projects/{project_id}/issues/{issue_iid}")
 
     return Issue(**response)
+
+
+@mcp.tool(title="List GitLab Project Merge Requests")
+def list_project_merge_requests(payload: ListMergeRequestsRequest) -> MergeRequestList:
+    """List all merge requests for a specific GitLab project with optional filtering."""
+    
+    # Convert the payload to query parameters, excluding project_id and None values
+    params = payload.model_dump(exclude={'project_id'}, exclude_none=True)
+    
+    # Handle special formatting for iids parameter (needs to be iids[])
+    if 'iids' in params and params['iids']:
+        iids_list = params.pop('iids')
+        for i, iid in enumerate(iids_list):
+            params[f'iids[{i}]'] = iid
+    
+    response = gitlab_request("GET", f"/projects/{payload.project_id}/merge_requests", params=params)
+    
+    return MergeRequestList(merge_requests=[MergeRequest(**mr) for mr in response])

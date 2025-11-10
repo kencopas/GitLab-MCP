@@ -161,3 +161,114 @@ class Project(BaseModel):
 
 class ProjectList(BaseModel):
     projects: List[Project] = Field(default_factory=list)
+
+
+class MergeRequest(BaseModel):
+    id: int
+    iid: int
+    project_id: int
+    
+    title: str
+    description: Optional[str] = None
+    
+    state: Optional[Literal["opened", "closed", "merged", "locked"] | str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    merged_at: Optional[datetime] = None
+    closed_at: Optional[datetime] = None
+    prepared_at: Optional[datetime] = None
+    
+    author: Optional[User] = None
+    assignee: Optional[User] = None
+    assignees: Optional[List[User]] = Field(default_factory=list)
+    reviewers: Optional[List[User]] = Field(default_factory=list)
+    merged_by: Optional[User] = None  # Deprecated, use merge_user instead
+    merge_user: Optional[User] = None
+    closed_by: Optional[User] = None
+    
+    source_branch: Optional[str] = None
+    target_branch: Optional[str] = None
+    source_project_id: Optional[int] = None
+    target_project_id: Optional[int] = None
+    
+    labels: Optional[List[str]] = Field(default_factory=list)
+    milestone: Optional[Milestone] = None
+    
+    draft: Optional[bool] = None
+    work_in_progress: Optional[bool] = None  # Deprecated, use draft instead
+    
+    merge_status: Optional[str] = None  # Deprecated, use detailed_merge_status instead
+    detailed_merge_status: Optional[str] = None
+    merge_when_pipeline_succeeds: Optional[bool] = None
+    
+    has_conflicts: Optional[bool] = None
+    blocking_discussions_resolved: Optional[bool] = None
+    discussion_locked: Optional[bool] = None
+    
+    upvotes: Optional[int] = None
+    downvotes: Optional[int] = None
+    user_notes_count: Optional[int] = None
+    
+    sha: Optional[str] = None
+    merge_commit_sha: Optional[str] = None
+    squash_commit_sha: Optional[str] = None
+    
+    should_remove_source_branch: Optional[bool] = None
+    force_remove_source_branch: Optional[bool] = None
+    squash: Optional[bool] = None
+    squash_on_merge: Optional[bool] = None
+    
+    web_url: Optional[HttpUrl] = None
+    reference: Optional[str] = None  # Deprecated, use references instead
+    references: Optional[References] = None
+    
+    time_stats: Optional[TimeStats] = None
+    task_completion_status: Optional[TaskCompletionStatus] = None
+    
+    approvals_before_merge: Optional[int] = None  # Premium and Ultimate only
+    imported: Optional[bool] = None
+    imported_from: Optional[str] = None
+    
+    class Config:
+        str_strip_whitespace = False
+        use_enum_values = True
+
+
+class MergeRequestList(BaseModel):
+    merge_requests: List[MergeRequest] = Field(default_factory=list)
+
+
+
+class ListMergeRequestsRequest(BaseModel):
+    project_id: str | int = Field(..., description="Project ID or URL-encoded path of the project")
+    
+    # Filter parameters
+    approved_by_ids: Optional[List[int]] = Field(None, description="Returns merge requests approved by all the users with the given id, up to 5 users. Premium and Ultimate only.")
+    approver_ids: Optional[List[int]] = Field(None, description="Returns merge requests which have specified all the users with the given id as individual approvers. Premium and Ultimate only.")
+    assignee_id: Optional[int] = Field(None, description="Returns merge requests assigned to the given user id. None returns unassigned merge requests. Any returns merge requests with an assignee.")
+    author_id: Optional[int] = Field(None, description="Returns merge requests created by the given user id. Mutually exclusive with author_username.")
+    author_username: Optional[str] = Field(None, description="Returns merge requests created by the given username. Mutually exclusive with author_id.")
+    created_after: Optional[str] = Field(None, description="Returns merge requests created on or after the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z).")
+    created_before: Optional[str] = Field(None, description="Returns merge requests created on or before the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z).")
+    environment: Optional[str] = Field(None, description="Returns merge requests deployed to the given environment.")
+    iids: Optional[List[int]] = Field(None, description="Returns the request having the given iid.")
+    labels: Optional[str] = Field(None, description="Returns merge requests matching a comma-separated list of labels. None lists all merge requests with no labels. Any lists all merge requests with at least one label.")
+    merge_user_id: Optional[int] = Field(None, description="Returns merge requests merged by the user with the given user id. Mutually exclusive with merge_user_username.")
+    merge_user_username: Optional[str] = Field(None, description="Returns merge requests merged by the user with the given username. Mutually exclusive with merge_user_id.")
+    milestone: Optional[str] = Field(None, description="Returns merge requests for a specific milestone. None returns merge requests with no milestone. Any returns merge requests that have an assigned milestone.")
+    my_reaction_emoji: Optional[str] = Field(None, description="Returns merge requests reacted by the authenticated user by the given emoji. None returns issues not given a reaction. Any returns issues given at least one reaction.")
+    order_by: Optional[str] = Field("created_at", description="Returns requests ordered by created_at, title or updated_at fields. Default is created_at.")
+    reviewer_id: Optional[int] = Field(None, description="Returns merge requests which have the user as a reviewer with the given user id. None returns merge requests with no reviewers. Any returns merge requests with any reviewer. Mutually exclusive with reviewer_username.")
+    reviewer_username: Optional[str] = Field(None, description="Returns merge requests which have the user as a reviewer with the given username. Mutually exclusive with reviewer_id.")
+    scope: Optional[str] = Field(None, description="Returns merge requests for the given scope: created_by_me, assigned_to_me, or all.")
+    search: Optional[str] = Field(None, description="Search merge requests against their title and description.")
+    sort: Optional[str] = Field("desc", description="Returns requests sorted in asc or desc order. Default is desc.")
+    source_branch: Optional[str] = Field(None, description="Returns merge requests with the given source branch.")
+    state: Optional[str] = Field(None, description="Returns all merge requests (all) or just those that are opened, closed, locked, or merged.")
+    target_branch: Optional[str] = Field(None, description="Returns merge requests with the given target branch.")
+    updated_after: Optional[str] = Field(None, description="Returns merge requests updated on or after the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z).")
+    updated_before: Optional[str] = Field(None, description="Returns merge requests updated on or before the given time. Expected in ISO 8601 format (2019-03-15T08:00:00Z).")
+    view: Optional[str] = Field(None, description="If simple, returns the iid, URL, title, description, and basic state of merge request.")
+    wip: Optional[str] = Field(None, description="Filter merge requests against their wip status. yes to return only draft merge requests, no to return non-draft merge requests.")
+    with_labels_details: Optional[bool] = Field(False, description="If true, response returns more details for each label in labels field. Default is false.")
+    with_merge_status_recheck: Optional[bool] = Field(False, description="If true, this projection requests an asynchronous recalculation of the merge_status field. Default is false.")
