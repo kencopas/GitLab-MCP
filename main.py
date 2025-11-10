@@ -1,9 +1,5 @@
 from server import mcp
 from tools import *
-from dotenv import load_dotenv
-
-
-load_dotenv()
 
 
 def main():

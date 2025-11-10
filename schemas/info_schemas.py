@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, HttpUrl, AnyUrl
-from typing import Optional, List, Dict, Any, Union, Literal, Tuple, Self
+from typing import Optional, List, Dict, Any, Union, Literal, Tuple
 from datetime import datetime
 
 
@@ -96,6 +96,7 @@ class Issue(BaseModel):
     due_date: Optional[datetime] = None
     confidential: Optional[bool] = None
     discussion_locked: Optional[bool] = None
+    subscribed: Optional[bool] = None
 
     web_url: Optional[HttpUrl] = None
     _links: Optional[Links] = None
@@ -114,7 +115,7 @@ class Issue(BaseModel):
     service_desk_reply_to: Optional[str] = None
 
     class Config:
-        anystr_strip_whitespace = False
+        str_strip_whitespace = False
         use_enum_values = True
 
 
@@ -154,7 +155,7 @@ class Project(BaseModel):
     namespace: Optional[Namespace] = None
 
     class Config:
-        anystr_strip_whitespace = False
+        str_strip_whitespace = False
         use_enum_values = True
 
 

@@ -1,50 +1,39 @@
-import os
-
-import requests
-from rich import print_json
-
-from schemas import Issue, ProjectDetails, IssueList, ProjectList, Project
+from schemas.info_schemas import Issue, ProjectDetails, IssueList, ProjectList, Project
 from server import mcp
-from config.config import GITLAB_URL, GITLAB_API_PAT
+from services.gitlab_api import gitlab_request
 
 
-@mcp.tool(title="List Projects")
+@mcp.tool(title="List GitLab Projects")
 def list_projects() -> ProjectList:
-    """List all projects accessible by the user."""
-    response = requests.get(
-        f"{GITLAB_URL}/api/v4/projects",
-        headers={"Authorization": f"Bearer {GITLAB_API_PAT}"}
-    )
+    """List all GitLab projects accessible by the user."""
 
-    response.raise_for_status()
-    data = response.json()
+    response = gitlab_request("GET", "/projects")
 
-    return ProjectList(projects=[Project(**project) for project in data])
+    return ProjectList(projects=[Project(**project) for project in response])
 
 
-@mcp.tool(title="Get Project Details")
+@mcp.tool(title="Get GitLab Project Details")
 def get_project_details(project_id: int) -> ProjectDetails:
-    """Get details of a specific project."""
-    response = requests.get(
-        f"{GITLAB_URL}/api/v4/projects/{project_id}",
-        headers={"Authorization": f"Bearer {GITLAB_API_PAT}"}
-    )
+    """Get details of a specific GitLab project."""
 
-    response.raise_for_status()
-    data = response.json()
+    response = gitlab_request("GET", f"/projects/{project_id}")
 
-    return ProjectDetails(**data)
+    return ProjectDetails(**response)
 
 
-@mcp.tool(title="List Project Issues")
-def list_project_issues(project_id: int):
-    """List issues for a specific project."""
-    response = requests.get(
-        f"{GITLAB_URL}/api/v4/projects/{project_id}/issues",
-        headers={"Authorization": f"Bearer {GITLAB_API_PAT}"}
-    )
+@mcp.tool(title="List GitLab Project Issues")
+def list_project_issues(project_id: int) -> IssueList:
+    """List issues for a specific GitLab project."""
 
-    # response.raise_for_status()
-    data = response.json()
+    response = gitlab_request("GET", f"/projects/{project_id}/issues")
 
-    return IssueList(issues=[Issue(**issue) for issue in data])
+    return IssueList(issues=[Issue(**issue) for issue in response])
+
+
+@mcp.tool(title="Get GitLab Issue Details")
+def get_issue_details(project_id: int, issue_iid: int) -> Issue:
+    """Get details of a specific issue in a GitLab project."""
+
+    response = gitlab_request("GET", f"/projects/{project_id}/issues/{issue_iid}")
+
+    return Issue(**response)
