@@ -80,3 +80,13 @@ Go to the search bar at the top of VS Code and select `> MCP: Open User Configur
 In VS Code, upon adding a server entry you should be able to click the *Start* text that appears above the entry.
 
 Now GitHub Copilot should have access to the tools and resources within the server.
+
+### Podman Command
+
+```bash
+podman run --rm -it \
+--security-opt label=disable \
+-e GITLAB_API_PAT=glpat-yourpat \
+-e GITLAB_URL=https://your-gitlab-instance.com \
+gitlab-mcp:dev
+```
