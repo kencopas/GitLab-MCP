@@ -1,4 +1,16 @@
-from schemas.info_schemas import Issue, ProjectDetails, IssueList, ProjectList, Project, MergeRequest, MergeRequestList, ListMergeRequestsRequest
+from schemas.info_schemas import (
+    Issue,
+    ProjectDetails,
+    IssueList,
+    ProjectList,
+    Project,
+    MergeRequest,
+    MergeRequestList,
+    ListMergeRequestsRequest,
+    Label,
+    LabelList,
+    ListLabelsRequest
+)
 from server import mcp
 from services.gitlab_api import gitlab_request
 
@@ -66,3 +78,15 @@ def list_project_merge_requests(payload: ListMergeRequestsRequest) -> MergeReque
     response = gitlab_request("GET", f"/projects/{payload.project_id}/merge_requests", params=params)
     
     return MergeRequestList(merge_requests=[MergeRequest(**mr) for mr in response])
+
+
+@mcp.tool(title="List GitLab Project Labels")
+def list_project_labels(payload: ListLabelsRequest) -> LabelList:
+    """List all labels for a specific GitLab project with optional filtering."""
+    
+    # Convert the payload to query parameters, excluding project_id and None values
+    params = payload.model_dump(exclude={'project_id'}, exclude_none=True)
+    
+    response = gitlab_request("GET", f"/projects/{payload.project_id}/labels", params=params)
+    
+    return LabelList(labels=[Label(**label) for label in response])

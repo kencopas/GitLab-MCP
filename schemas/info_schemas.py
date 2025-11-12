@@ -272,3 +272,31 @@ class ListMergeRequestsRequest(BaseModel):
     wip: Optional[str] = Field(None, description="Filter merge requests against their wip status. yes to return only draft merge requests, no to return non-draft merge requests.")
     with_labels_details: Optional[bool] = Field(False, description="If true, response returns more details for each label in labels field. Default is false.")
     with_merge_status_recheck: Optional[bool] = Field(False, description="If true, this projection requests an asynchronous recalculation of the merge_status field. Default is false.")
+
+
+class Label(BaseModel):
+    id: int
+    name: str
+    color: str
+    text_color: Optional[str] = None
+    description: Optional[str] = None
+    description_html: Optional[str] = None
+    open_issues_count: Optional[int] = None
+    closed_issues_count: Optional[int] = None
+    open_merge_requests_count: Optional[int] = None
+    subscribed: Optional[bool] = None
+    priority: Optional[int] = None
+    is_project_label: Optional[bool] = None
+    archived: Optional[bool] = None
+
+
+class LabelList(BaseModel):
+    labels: List[Label]
+
+
+class ListLabelsRequest(BaseModel):
+    project_id: Union[str, int] = Field(description="Project ID or URL-encoded path of the project")
+    with_counts: Optional[bool] = Field(False, description="Whether or not to include issue and merge request counts. Defaults to false.")
+    include_ancestor_groups: Optional[bool] = Field(True, description="Include ancestor groups. Defaults to true.")
+    search: Optional[str] = Field(None, description="Keyword to filter labels by.")
+    archived: Optional[bool] = Field(None, description="Whether the label is archived. Returns all labels, when not set. Requires the labels_archive feature flag to be enabled.")
