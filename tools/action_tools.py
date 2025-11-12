@@ -1,7 +1,7 @@
 from schemas.action_schemas import CreateIssueRequest, CreateIssueResponse, EditIssueRequest
 from schemas.info_schemas import Issue
 from server import mcp
-from services.gitlab_api import gitlab_request
+from services.gitlab_api import gitlab_request, validate_labels
 
 """
 ATTENTION:
@@ -15,6 +15,11 @@ This can be done by calling the GET /projects/:id/labels endpoint from the GitLa
 def create_issue(payload: CreateIssueRequest) -> CreateIssueResponse:
     """Create a new GitLab issue in a specific project."""
 
+    # Validate labels against existing project labels
+    if payload.labels:
+        labels_list = [label.strip() for label in payload.labels.split(',')]
+        validate_labels(payload.project_id, labels_list)
+
     issue_info_data = payload.model_dump(exclude={'project_id'}, exclude_none=True)
     response = gitlab_request("POST", f"/projects/{payload.project_id}/issues", params=issue_info_data)
 
@@ -24,6 +29,11 @@ def create_issue(payload: CreateIssueRequest) -> CreateIssueResponse:
 @mcp.tool(title="Edit GitLab Issue")
 def edit_issue(payload: EditIssueRequest) -> Issue:
     """Edit an existing GitLab issue in a specific project."""
+
+    # Validate labels against existing project labels
+    if payload.labels:
+        labels_list = [label.strip() for label in payload.labels.split(',')]
+        validate_labels(payload.project_id, labels_list)
 
     issue_info_data = payload.model_dump(exclude={'project_id', 'issue_iid'}, exclude_none=True)
     response = gitlab_request("PUT", f"/projects/{payload.project_id}/issues/{payload.issue_iid}", params=issue_info_data)

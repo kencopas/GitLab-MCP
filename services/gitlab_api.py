@@ -44,3 +44,13 @@ def gitlab_request(method: Literal['GET', 'POST', 'PUT', 'DELETE'], endpoint: st
         return response.json()
     except ValueError:
         return {"error": "Invalid JSON response"}
+
+
+def validate_labels(project_id, labels) -> None:
+    """Validate that the labels in the payload exist in the project."""
+    labels_response = gitlab_request("GET", f"/projects/{project_id}/labels")
+    existing_labels = {label['name'] for label in labels_response}
+
+    if any(label not in existing_labels for label in labels):
+        invalid_labels = [label for label in labels if label not in existing_labels]
+        raise ValueError(f"Invalid labels: {', '.join(invalid_labels)}. Please use existing project labels: {', '.join(existing_labels)}")
