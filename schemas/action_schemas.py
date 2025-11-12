@@ -110,4 +110,30 @@ class CreateIssueResponse(BaseModel):
     due_date: Optional[str] = None
     severity: Optional[str] = None
     merge_requests_count: Optional[int] = None
+
     assignees: Optional[List[Author]] = None
+
+
+# Input schema for creating a merge request
+class CreateMergeRequestRequest(BaseModel):
+    project_id: str | int = Field(..., description="Project ID or URL-encoded path of the project")
+    source_branch: str = Field(..., description="The source branch.")
+    target_branch: str = Field(..., description="The target branch.")
+    title: str = Field(..., description="Title of MR.")
+    allow_collaboration: Optional[bool] = None
+    approvals_before_merge: Optional[int] = None
+    allow_maintainer_to_push: Optional[bool] = None
+    assignee_id: Optional[int] = None
+    assignee_ids: Optional[List[int]] = None
+    description: Optional[str] = None
+    labels: Optional[str] = None
+    merge_after: Optional[str] = None
+    milestone_id: Optional[int] = None
+    remove_source_branch: Optional[bool] = None
+    reviewer_ids: Optional[List[int]] = None
+    squash: Optional[bool] = None
+    target_project_id: Optional[int] = None
+
+# Output schema for the response
+from schemas.info_schemas import MergeRequest
+CreateMergeRequestResponse = MergeRequest

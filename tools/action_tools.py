@@ -1,14 +1,29 @@
-from schemas.action_schemas import CreateIssueRequest, CreateIssueResponse, EditIssueRequest
+from schemas.action_schemas import *
 from schemas.info_schemas import Issue
 from server import mcp
 from services.gitlab_api import gitlab_request, validate_labels
 
-"""
-ATTENTION:
 
-Need to add the ability to list the available issue labels for a project so that they aren't created out of thin air.
-This can be done by calling the GET /projects/:id/labels endpoint from the GitLab API.
-"""
+@mcp.tool(title="Create GitLab Merge Request")
+def create_merge_request(payload: CreateMergeRequestRequest) -> CreateMergeRequestResponse:
+    """Create a new GitLab merge request in a specific project.
+
+    Args:
+        payload (CreateMergeRequestRequest): Parameters for the merge request, including required and optional fields
+
+    Returns:
+        CreateMergeRequestResponse: The created merge request object, matching the GitLab API response.
+    """
+
+    # Validate labels against existing project labels
+    if payload.labels:
+        labels_list = [label.strip() for label in payload.labels.split(',')]
+        validate_labels(payload.project_id, labels_list)
+
+    mr_data = payload.model_dump(exclude={'project_id'}, exclude_none=True)
+    response = gitlab_request("POST", f"/projects/{payload.project_id}/merge_requests", params=mr_data)
+
+    return CreateMergeRequestResponse(**response)
 
 
 @mcp.tool(title="Create GitLab Issue")

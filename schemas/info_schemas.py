@@ -300,3 +300,44 @@ class ListLabelsRequest(BaseModel):
     include_ancestor_groups: Optional[bool] = Field(True, description="Include ancestor groups. Defaults to true.")
     search: Optional[str] = Field(None, description="Keyword to filter labels by.")
     archived: Optional[bool] = Field(None, description="Whether the label is archived. Returns all labels, when not set. Requires the labels_archive feature flag to be enabled.")
+
+class CommitInfo(BaseModel):
+    id: str
+    short_id: str
+    created_at: Optional[datetime] = None
+    parent_ids: Optional[List[str]] = None
+    title: Optional[str] = None
+    message: Optional[str] = None
+    author_name: Optional[str] = None
+    author_email: Optional[str] = None
+    authored_date: Optional[datetime] = None
+    committer_name: Optional[str] = None
+    committer_email: Optional[str] = None
+    committed_date: Optional[datetime] = None
+    trailers: Optional[Dict[str, Any]] = None
+    extended_trailers: Optional[Dict[str, Any]] = None
+    web_url: Optional[HttpUrl] = None
+
+class BranchInfo(BaseModel):
+    name: str
+    merged: Optional[bool] = None
+    protected: Optional[bool] = None
+    default: Optional[bool] = None
+    developers_can_push: Optional[bool] = None
+    developers_can_merge: Optional[bool] = None
+    can_push: Optional[bool] = None
+    web_url: Optional[HttpUrl] = None
+    commit: Optional[CommitInfo] = None
+
+class ListBranchesRequest(BaseModel):
+    project_id: Union[str, int] = Field(..., description="Project ID or URL-encoded path of the project")
+    regex: Optional[str] = Field(None, description="Return branches matching a re2 regex.")
+    search: Optional[str] = Field(None, description="Return branches containing the search string.")
+
+class BranchList(BaseModel):
+    branches: List[BranchInfo] = Field(default_factory=list)
+    project_id: Union[str, int] = Field(description="Project ID or URL-encoded path of the project")
+    with_counts: Optional[bool] = Field(False, description="Whether or not to include issue and merge request counts. Defaults to false.")
+    include_ancestor_groups: Optional[bool] = Field(True, description="Include ancestor groups. Defaults to true.")
+    search: Optional[str] = Field(None, description="Keyword to filter labels by.")
+    archived: Optional[bool] = Field(None, description="Whether the label is archived. Returns all labels, when not set. Requires the labels_archive feature flag to be enabled.")

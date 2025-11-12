@@ -1,18 +1,25 @@
-from schemas.info_schemas import (
-    Issue,
-    ProjectDetails,
-    IssueList,
-    ProjectList,
-    Project,
-    MergeRequest,
-    MergeRequestList,
-    ListMergeRequestsRequest,
-    Label,
-    LabelList,
-    ListLabelsRequest
-)
+from schemas.info_schemas import *
 from server import mcp
 from services.gitlab_api import gitlab_request
+
+
+@mcp.tool(title="List GitLab Project Repository Branches")
+def list_project_repository_branches(payload: ListBranchesRequest) -> BranchList:
+    """
+    List repository branches for a GitLab project, with optional regex or search filtering.
+
+    Args:
+        payload (ListBranchesRequest):
+            - project_id (str|int): Project ID or URL-encoded path of the project (required)
+            - regex (str): Return branches matching a re2 regex (optional)
+            - search (str): Return branches containing the search string (optional)
+
+    Returns:
+        BranchList: List of branches with detailed info, including protection, merge status, and commit details.
+    """
+    params = payload.model_dump(exclude={'project_id'}, exclude_none=True)
+    response = gitlab_request("GET", f"/projects/{payload.project_id}/repository/branches", params=params)
+    return BranchList(branches=[BranchInfo(**branch) for branch in response])
 
 
 @mcp.tool(title="GitLab API Health Check")
