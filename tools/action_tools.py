@@ -2,6 +2,7 @@ from schemas.action_schemas import *
 from schemas.info_schemas import Issue
 from server import mcp
 from services.gitlab_api import gitlab_request, validate_labels
+from .info_tools import get_issue_details
 
 
 @mcp.tool(title="Create GitLab Merge Request")
@@ -34,6 +35,13 @@ def create_issue(payload: CreateIssueRequest) -> CreateIssueResponse:
     if payload.labels:
         labels_list = [label.strip() for label in payload.labels.split(',')]
         validate_labels(payload.project_id, labels_list)
+    
+    if payload.iid:
+        try:
+            existing_issue = get_issue_details(payload.project_id, payload.iid)
+            raise ValueError(f"Issue with IID {payload.iid} already exists in project {payload.project_id}.")
+        except Exception:
+            pass  # Issue does not exist, proceed to create
 
     issue_info_data = payload.model_dump(exclude={'project_id'}, exclude_none=True)
     response = gitlab_request("POST", f"/projects/{payload.project_id}/issues", params=issue_info_data)
