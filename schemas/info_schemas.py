@@ -17,11 +17,36 @@ class User(BaseModel):
     id: int
     username: str
     public_email: Optional[str] = None
+    email: Optional[str] = None
     name: Optional[str] = None
     state: Optional[Literal["active", "blocked", "deactivated", "ldap_blocked", "banned"] | str] = None
     locked: Optional[bool] = None
     avatar_url: Optional[str] = None
     web_url: Optional[HttpUrl] = None
+
+
+class ListUsersRequest(BaseModel):
+    username: Optional[str] = Field(None, description="Filter by exact username")
+    public_email: Optional[str] = Field(None, description="Filter by exact public email")
+    search: Optional[str] = Field(None, description="Fuzzy search by name, username, or public email")
+    active: Optional[bool] = Field(None, description="Return only active users")
+    external: Optional[bool] = Field(None, description="Return only external users")
+    blocked: Optional[bool] = Field(None, description="Return only blocked users")
+    humans: Optional[bool] = Field(None, description="Return only non-bot, non-internal users")
+    created_after: Optional[datetime] = Field(None, description="Return users created after the given timestamp")
+    created_before: Optional[datetime] = Field(None, description="Return users created before the given timestamp")
+    exclude_active: Optional[bool] = Field(None, description="Exclude active users")
+    exclude_external: Optional[bool] = Field(None, description="Exclude external users")
+    exclude_humans: Optional[bool] = Field(None, description="Exclude human users")
+    exclude_internal: Optional[bool] = Field(None, description="Exclude internal bot users")
+    without_project_bots: Optional[bool] = Field(None, description="Exclude project bot users")
+    saml_provider_id: Optional[int] = Field(None, description="Filter by SAML provider ID (deprecated)")
+    page: Optional[int] = Field(None, ge=1, description="Page number for pagination")
+    per_page: Optional[int] = Field(None, ge=1, le=100, description="Number of results per page")
+
+
+class UserList(BaseModel):
+    users: List[User] = Field(default_factory=list)
 
 
 class Milestone(BaseModel):
@@ -170,13 +195,17 @@ class MergeRequest(BaseModel):
     
     title: str
     description: Optional[str] = None
+    allow_collaboration: Optional[bool] = None
+    allow_maintainer_to_push: Optional[bool] = None
     
     state: Optional[Literal["opened", "closed", "merged", "locked"] | str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     merged_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
+    merge_after: Optional[datetime] = None
     prepared_at: Optional[datetime] = None
+    first_deployed_to_production_at: Optional[datetime] = None
     
     author: Optional[User] = None
     assignee: Optional[User] = None
@@ -196,14 +225,19 @@ class MergeRequest(BaseModel):
     
     draft: Optional[bool] = None
     work_in_progress: Optional[bool] = None  # Deprecated, use draft instead
+    first_contribution: Optional[bool] = None
     
     merge_status: Optional[str] = None  # Deprecated, use detailed_merge_status instead
     detailed_merge_status: Optional[str] = None
     merge_when_pipeline_succeeds: Optional[bool] = None
+    merge_error: Optional[str] = None
     
     has_conflicts: Optional[bool] = None
     blocking_discussions_resolved: Optional[bool] = None
     discussion_locked: Optional[bool] = None
+    rebase_in_progress: Optional[bool] = None
+    diverged_commits_count: Optional[int] = None
+    changes_count: Optional[str] = None
     
     upvotes: Optional[int] = None
     downvotes: Optional[int] = None
@@ -221,17 +255,25 @@ class MergeRequest(BaseModel):
     web_url: Optional[HttpUrl] = None
     reference: Optional[str] = None  # Deprecated, use references instead
     references: Optional[References] = None
+    diff_refs: Optional[Dict[str, Any]] = None
     
     time_stats: Optional[TimeStats] = None
     task_completion_status: Optional[TaskCompletionStatus] = None
+    latest_build_started_at: Optional[datetime] = None
+    latest_build_finished_at: Optional[datetime] = None
+    head_pipeline: Optional[Dict[str, Any]] = None
+    pipeline: Optional[Dict[str, Any]] = None
     
     approvals_before_merge: Optional[int] = None  # Premium and Ultimate only
     imported: Optional[bool] = None
     imported_from: Optional[str] = None
+    subscribed: Optional[bool] = None
+    user: Optional[Dict[str, Any]] = None
     
     class Config:
         str_strip_whitespace = False
         use_enum_values = True
+        extra = "allow"
 
 
 class MergeRequestList(BaseModel):
@@ -272,6 +314,23 @@ class ListMergeRequestsRequest(BaseModel):
     wip: Optional[str] = Field(None, description="Filter merge requests against their wip status. yes to return only draft merge requests, no to return non-draft merge requests.")
     with_labels_details: Optional[bool] = Field(False, description="If true, response returns more details for each label in labels field. Default is false.")
     with_merge_status_recheck: Optional[bool] = Field(False, description="If true, this projection requests an asynchronous recalculation of the merge_status field. Default is false.")
+
+
+class GetMergeRequestRequest(BaseModel):
+    project_id: Union[str, int] = Field(..., description="Project ID or URL-encoded path of the project")
+    merge_request_iid: int = Field(..., description="The internal ID of the merge request")
+    include_diverged_commits_count: Optional[bool] = Field(
+        None,
+        description="If true, includes the number of commits the source branch is behind the target branch.",
+    )
+    include_rebase_in_progress: Optional[bool] = Field(
+        None,
+        description="If true, indicates whether a rebase operation is currently in progress.",
+    )
+    render_html: Optional[bool] = Field(
+        None,
+        description="If true, returns rendered HTML for the merge request title and description.",
+    )
 
 
 class Label(BaseModel):
@@ -341,3 +400,37 @@ class BranchList(BaseModel):
     include_ancestor_groups: Optional[bool] = Field(True, description="Include ancestor groups. Defaults to true.")
     search: Optional[str] = Field(None, description="Keyword to filter labels by.")
     archived: Optional[bool] = Field(None, description="Whether the label is archived. Returns all labels, when not set. Requires the labels_archive feature flag to be enabled.")
+
+
+class Note(BaseModel):
+    id: int
+    body: Optional[str] = None
+    author: Optional[User] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    system: Optional[bool] = None
+    noteable_id: Optional[int] = None
+    noteable_type: Optional[str] = None
+    project_id: Optional[int] = None
+    noteable_iid: Optional[int] = None
+    resolvable: Optional[bool] = None
+    confidential: Optional[bool] = None
+    internal: Optional[bool] = None
+    imported: Optional[bool] = None
+    imported_from: Optional[str] = None
+
+
+class NoteList(BaseModel):
+    notes: List[Note] = Field(default_factory=list)
+
+
+class ListIssueNotesRequest(BaseModel):
+    project_id: Union[str, int] = Field(..., description="Project ID or URL-encoded path of the project")
+    issue_iid: int = Field(..., description="Issue IID")
+    activity_filter: Optional[Literal["all_notes", "only_comments", "only_activity"]] = Field(
+        None, description="Filter notes by activity type."
+    )
+    sort: Optional[Literal["asc", "desc"]] = Field(None, description="Sort order for returned notes.")
+    order_by: Optional[Literal["created_at", "updated_at"]] = Field(
+        None, description="Field used to order notes."
+    )

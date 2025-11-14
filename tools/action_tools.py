@@ -1,5 +1,5 @@
 from schemas.action_schemas import *
-from schemas.info_schemas import Issue
+from schemas.info_schemas import Issue, Note
 from server import mcp
 from services.gitlab_api import gitlab_request, validate_labels
 from .info_tools import get_issue_details
@@ -38,7 +38,7 @@ def create_issue(payload: CreateIssueRequest) -> CreateIssueResponse:
     
     if payload.iid:
         try:
-            existing_issue = get_issue_details(payload.project_id, payload.iid)
+            get_issue_details(payload.project_id, payload.iid)
             raise ValueError(f"Issue with IID {payload.iid} already exists in project {payload.project_id}.")
         except Exception:
             pass  # Issue does not exist, proceed to create
@@ -72,3 +72,15 @@ def delete_issue(project_id: int, issue_iid: int) -> dict:
     success = response is None or response == ''
     
     return {"success": success}
+
+
+@mcp.tool(title="Create GitLab Issue Note")
+def create_issue_note(payload: CreateIssueNoteRequest) -> Note:
+    """Create a new note on a specific GitLab issue."""
+
+    note_data = payload.model_dump(exclude={"project_id", "issue_iid"}, exclude_none=True)
+    response = gitlab_request(
+        "POST", f"/projects/{payload.project_id}/issues/{payload.issue_iid}/notes", params=note_data
+    )
+
+    return Note(**response)

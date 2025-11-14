@@ -135,5 +135,20 @@ class CreateMergeRequestRequest(BaseModel):
     target_project_id: Optional[int] = None
 
 # Output schema for the response
-from schemas.info_schemas import MergeRequest
+from schemas.info_schemas import MergeRequest, Note
 CreateMergeRequestResponse = MergeRequest
+
+
+class CreateIssueNoteRequest(BaseModel):
+    project_id: Union[str, int] = Field(..., description="Project ID or URL-encoded path of the project")
+    issue_iid: int = Field(..., description="Issue IID")
+    body: str = Field(..., description="Content of the note")
+    confidential: Optional[bool] = Field(None, description="Deprecated, use internal instead")
+    internal: Optional[bool] = Field(None, description="If true, note is internal")
+    created_at: Optional[str] = Field(
+        None,
+        description="ISO 8601 timestamp; requires admin or project/group owner rights"
+    )
+
+
+CreateIssueNoteResponse = Note
