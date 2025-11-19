@@ -12,16 +12,16 @@ cd GitLab-MCP
 ### Windows
 
 ```bash
-uv venv  # OR python3 -m venv venv
-venv\Scripts\activate
+uv venv  # OR python3 -m venv .venv
+.venv\Scripts\activate
 uv sync  # OR pip install -r requirements.txt
 ```
 
 ### Linux
 
 ```bash
-uv venv  # OR python3 -m venv venv
-source venv/bin/activate
+uv venv  # OR python3 -m venv .venv
+source .venv/bin/activate
 uv sync  # OR pip install -r requirements.txt
 ```
 
